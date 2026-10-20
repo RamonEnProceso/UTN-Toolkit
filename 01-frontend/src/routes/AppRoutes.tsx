@@ -1,12 +1,13 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Diagram from '../features/diagram';
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Diagram />} />
+      <Route path="/" element={<Navigate to="/diagramaLindsay" replace />} />
       <Route path="/diagramaLindsay" element={<Diagram />} />
-      {/* Futuras rutas para otros tipos de diagramas */}
+      {/* Redirección por defecto ante rutas desconocidas */}
+      <Route path="*" element={<Navigate to="/diagramaLindsay" replace />} />
     </Routes>
   );
 }
