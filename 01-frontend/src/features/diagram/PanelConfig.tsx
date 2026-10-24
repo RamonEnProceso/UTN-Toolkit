@@ -16,7 +16,7 @@ interface Props {
 type ClaveConfigurable = 'anchoDiagrama' | 'paddingForma' | 'separacionAnidado' | 'separacionBloques' | 'margenDiagrama';
 
 const CAMPOS: { clave: ClaveConfigurable; etiqueta: string; min: number; max: number }[] = [
-  { clave: 'anchoDiagrama', etiqueta: 'Ancho del diagrama', min: 200, max: 1200 },
+  { clave: 'anchoDiagrama', etiqueta: 'Ancho del diagrama', min: 200, max: 5000 },
   { clave: 'paddingForma', etiqueta: 'Padding de las formas', min: 4, max: 40 },
   { clave: 'separacionAnidado', etiqueta: 'Separación anidada', min: 2, max: 32 },
   { clave: 'separacionBloques', etiqueta: 'Separación de bloques', min: 4, max: 80 },

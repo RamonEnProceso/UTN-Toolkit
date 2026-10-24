@@ -19,5 +19,5 @@ export { paginarA4 } from './export/paginarA4';
 export type { TramoPagina } from './export/paginarA4';
 export { serializarSvg } from './export/serializarSvg';
 export { exportarPng } from './export/exportarPng';
-export { exportarPdf } from './export/exportarPdf';
-export type { DiagramaParaExportar } from './export/exportarPdf';
+export { exportarPdf, calcularAjustePagina } from './export/exportarPdf';
+export type { DiagramaParaExportar, DimensionesPaginaPdf } from './export/exportarPdf';

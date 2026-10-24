@@ -109,6 +109,15 @@ export default function Diagram() {
     [programa, config],
   );
 
+  // Limpiar referencias a SVG que ya no correspondan si disminuye la cantidad de funciones
+  useEffect(() => {
+    for (const key of Array.from(svgRefs.current.keys())) {
+      if (key >= diagramas.length) {
+        svgRefs.current.delete(key);
+      }
+    }
+  }, [diagramas.length]);
+
   // Índice seguro para renderizar: se acota solo acá, sin tocar el estado.
   const indiceSeguro = diagramas.length === 0 ? 0 : Math.min(indiceActivo, diagramas.length - 1);
   const funcionesTab = programa.funciones.map((f) => ({ nombre: f.nombre, esMain: f.esMain }));
@@ -125,7 +134,7 @@ export default function Diagram() {
     const svg = svgRefs.current.get(indiceSeguro);
     if (!d || !svg) return;
     try {
-      await exportarPng(svg, nombreSeguro(d.funcion.nombre));
+      await exportarPng(svg, nombreSeguro(d.funcion.nombre), d.ancho, d.alto);
       setAviso('PNG exportado.');
     } catch {
       setAviso('No se pudo exportar el PNG.');
@@ -136,7 +145,15 @@ export default function Diagram() {
     const datos = diagramas
       .map((d, i): DiagramaParaExportar | null => {
         const svg = svgRefs.current.get(i);
-        return svg ? { nombre: d.funcion.nombre, svg, cortesPosibles: d.cortesPosibles } : null;
+        return svg
+          ? {
+              nombre: d.funcion.nombre,
+              svg,
+              ancho: d.ancho,
+              alto: d.alto,
+              cortesPosibles: d.cortesPosibles,
+            }
+          : null;
       })
       .filter((x): x is DiagramaParaExportar => x !== null);
     if (datos.length === 0) return;

@@ -10,9 +10,9 @@ export interface ImagenSvg {
   liberar: () => void; // revoca la object URL del blob
 }
 
-// Convierte un <svg> en una <img> ya cargada (con el tamaño de su viewBox).
-export function svgElementAImagen(svg: SVGSVGElement): Promise<ImagenSvg> {
-  const blob = new Blob([serializarSvg(svg)], { type: 'image/svg+xml;charset=utf-8' });
+// Convierte un <svg> en una <img> ya cargada (con el tamaño de su viewBox o parámetros).
+export function svgElementAImagen(svg: SVGSVGElement, ancho?: number, alto?: number): Promise<ImagenSvg> {
+  const blob = new Blob([serializarSvg(svg, ancho, alto)], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const imagen = new Image();
   return new Promise((resolve, reject) => {

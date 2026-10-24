@@ -68,7 +68,7 @@ function normalizar(s: string): string {
 // Traduce la marca de dirección ("v", "^", "v^") al tipo `Direccion`.
 function direccionDe(marca: string): Direccion {
   if (marca === '^') return 'salida';
-  if (marca === 'v^') return 'ambas';
+  if (marca === 'v^' || marca === '^v') return 'ambas';
   return 'entrada';
 }
 
@@ -77,7 +77,7 @@ function direccionDe(marca: string): Direccion {
 function parsearParametro(crudo: string): Parametro {
   const limpio = crudo.trim();
   // La marca va al final. Buscamos "v^" antes que "^" y "v" porque los contiene.
-  const m = limpio.match(/^(.+?)\s+(v\^|\^|v)$/);
+  const m = limpio.match(/^(.+?)\s+(v\^|\^v|\^|v)$/);
   if (m) {
     return { nombre: m[1].trim(), direccion: direccionDe(m[2]) };
   }
@@ -149,7 +149,7 @@ export function clasificarLinea(crudo: string): LineaClasificada {
   //    ("-Si x = 0") y que falte el guion directamente ("Leer x") (sección 4.1).
   let resto = crudo.slice(indentStr.length);
   resto = resto.replace(/^-\s*/, '').trim();
-  const texto = resto;
+  const texto = resto.replace(/<-/g, '←').replace(/->/g, '→');
 
   const base: LineaClasificada = {
     indent,
@@ -184,7 +184,7 @@ export function clasificarLinea(crudo: string): LineaClasificada {
     return { ...base, tipo: 'mientras', condicion: texto };
   }
   if (primera === 'para') {
-    return { ...base, tipo: 'para', condicion: texto.replace(/^Para\s*/i, '') };
+    return { ...base, tipo: 'para', condicion: texto };
   }
   if (primera === 'cuando') {
     // "Cuando X sea": la variable es lo que está entre "Cuando" y "sea".

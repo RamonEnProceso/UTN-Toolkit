@@ -1,68 +1,112 @@
 // exportarPdf.ts
-// Etapa 8 — exportar a PDF (sección 11.2). Una función por página, A4 vertical,
-// 10mm de margen, ancho ajustado a 190mm y corte de páginas en los conectores
-// (paginarA4). Plan B elegido (sección 11.2): rasterizar cada página a PNG de
-// 3x y agregarla con addImage, para que el texto (tildes, ñ, monospace) salga
-// idéntico a la pantalla y evitar los límites de svg2pdf.js.
+// Exportación a PDF: una página por función (pestaña), formato A4 vertical.
+// Cada función se ajusta proporcionalmente para entrar completa en una única página (190x265mm),
+// centrada y rasterizada a 3x para máxima nitidez de tipografía y formas.
 
-import { paginarA4 } from './paginarA4';
 import { svgElementAImagen } from './util';
 
 export interface DiagramaParaExportar {
   nombre: string;           // nombre de la función (pie de página)
   svg: SVGSVGElement;
-  cortesPosibles: number[]; // coordenadas Y seguras para cortar página
+  ancho?: number;
+  alto?: number;
+  cortesPosibles?: number[]; // mantenido por compatibilidad
 }
 
-const MARGEN_MM = 10;
-const ANCHO_UTIL_MM = 190; // 210 - 2*10
-const ALTO_UTIL_MM = 277;  // 297 - 2*10
-const ESCALA_RASTER = 3;
+export interface DimensionesPaginaPdf {
+  xMm: number;
+  yMm: number;
+  anchoDestinoMm: number;
+  altoDestinoMm: number;
+  textoPie: string;
+}
 
-export async function exportarPdf(diagramas: DiagramaParaExportar[]): Promise<void> {
+export const MARGEN_MM = 10;
+export const ANCHO_PAGINA_MM = 210;
+export const ALTO_PAGINA_MM = 297;
+export const ANCHO_UTIL_MM = ANCHO_PAGINA_MM - 2 * MARGEN_MM; // 190 mm
+export const ALTO_UTIL_MM = 265; // 297 - 10 (top) - 22 (pie de página y margen inferior)
+export const ESCALA_RASTER = 3;
+
+/**
+ * Calcula las dimensiones y posición del diagrama para que entre exactamente
+ * en una página A4 vertical respetando márgenes y aspecto original.
+ */
+export function calcularAjustePagina(
+  anchoPx: number,
+  altoPx: number,
+  nombre: string,
+  indice: number,
+  totalPaginas: number,
+): DimensionesPaginaPdf {
+  const escalaMm = Math.min(ANCHO_UTIL_MM / anchoPx, ALTO_UTIL_MM / altoPx);
+  const anchoDestinoMm = anchoPx * escalaMm;
+  const altoDestinoMm = altoPx * escalaMm;
+
+  // Centrado horizontal en la página
+  const xMm = (ANCHO_PAGINA_MM - anchoDestinoMm) / 2;
+  // Centrado vertical dentro del área útil de la página
+  const yMm = MARGEN_MM + (ALTO_UTIL_MM - altoDestinoMm) / 2;
+
+  const textoPie = `${nombre} — pág. ${indice + 1}/${totalPaginas}`;
+
+  return {
+    xMm,
+    yMm,
+    anchoDestinoMm,
+    altoDestinoMm,
+    textoPie,
+  };
+}
+
+export async function exportarPdf(
+  diagramas: DiagramaParaExportar[],
+  nombreArchivo: string = 'diagrama',
+): Promise<void> {
+  if (diagramas.length === 0) return;
+
   const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
-  let primeraPagina = true;
+  const totalPaginas = diagramas.length;
 
-  for (const d of diagramas) {
-    const anchoPx = d.svg.viewBox.baseVal.width;
-    const altoPx = d.svg.viewBox.baseVal.height;
-    const mmPorPx = ANCHO_UTIL_MM / anchoPx;
-    const altoPaginaPx = ALTO_UTIL_MM / mmPorPx;
-    const tramos = paginarA4(altoPx, d.cortesPosibles, altoPaginaPx);
+  for (let i = 0; i < totalPaginas; i++) {
+    const d = diagramas[i];
+    if (i > 0) pdf.addPage();
 
-    const { imagen, liberar } = await svgElementAImagen(d.svg);
+    const anchoPx = d.ancho ?? (d.svg.viewBox?.baseVal?.width || Number(d.svg.getAttribute('width')) || 400);
+    const altoPx = d.alto ?? (d.svg.viewBox?.baseVal?.height || Number(d.svg.getAttribute('height')) || 400);
+
+    const ajuste = calcularAjustePagina(anchoPx, altoPx, d.nombre, i, totalPaginas);
+
+    const { imagen, liberar } = await svgElementAImagen(d.svg, anchoPx, altoPx);
     try {
-      for (let i = 0; i < tramos.length; i++) {
-        if (!primeraPagina) pdf.addPage();
-        primeraPagina = false;
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(anchoPx * ESCALA_RASTER);
+      canvas.height = Math.round(altoPx * ESCALA_RASTER);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('No se pudo crear el contexto 2D del canvas.');
 
-        const t = tramos[i];
-        const altoTramoPx = t.yFin - t.yInicio;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(imagen, 0, 0, canvas.width, canvas.height);
 
-        const canvas = document.createElement('canvas');
-        canvas.width = anchoPx * ESCALA_RASTER;
-        canvas.height = altoTramoPx * ESCALA_RASTER;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('No se pudo crear el contexto 2D del canvas.');
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(
-          imagen,
-          0, t.yInicio, anchoPx, altoTramoPx,
-          0, 0, canvas.width, canvas.height,
-        );
+      pdf.addImage(
+        canvas.toDataURL('image/png'),
+        'PNG',
+        ajuste.xMm,
+        ajuste.yMm,
+        ajuste.anchoDestinoMm,
+        ajuste.altoDestinoMm,
+      );
 
-        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', MARGEN_MM, MARGEN_MM, ANCHO_UTIL_MM, altoTramoPx * mmPorPx);
-
-        pdf.setFontSize(10);
-        pdf.text(`${d.nombre} — pág. ${i + 1}/${tramos.length}`, 210 / 2, 297 - MARGEN_MM / 2, { align: 'center' });
-      }
+      pdf.setFontSize(10);
+      pdf.setTextColor(90, 90, 90);
+      pdf.text(ajuste.textoPie, ANCHO_PAGINA_MM / 2, ALTO_PAGINA_MM - 8, { align: 'center' });
     } finally {
       liberar();
     }
   }
 
-  pdf.save('diagrama.pdf');
+  pdf.save(`${nombreArchivo}.pdf`);
 }

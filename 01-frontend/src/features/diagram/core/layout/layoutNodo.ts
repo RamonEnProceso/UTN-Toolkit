@@ -168,7 +168,7 @@ function condicionalSi(
   medida: Medida,
 ): NodoLayout {
   const sep = config.separacionAnidado;
-  const f = franja(nodo.condicion, ancho, config, fuente, medida);
+  const f = franja(nodo.texto, ancho, config, fuente, medida);
 
   const areaX = x + sep;
   const areaY = y + f.alto + sep;
@@ -179,7 +179,7 @@ function condicionalSi(
   const anchoDer = areaAncho - anchoIzq;
 
   const colIzq = columna('SI', nodo.entonces, areaX, areaY, anchoIzq, config, fuente, medida);
-  const colDer = columna('SINO', nodo.sino ?? [], areaX + anchoIzq, areaY, anchoDer, config, fuente, medida);
+  const colDer = columna('NO', nodo.sino ?? [], areaX + anchoIzq, areaY, anchoDer, config, fuente, medida);
 
   const altoColumnas = Math.max(colIzq.caja.alto, colDer.caja.alto);
 
