@@ -197,6 +197,9 @@ export default function Diagram() {
             onCambio={(patch) => setConfig((c) => ({ ...c, ...patch }))}
             onRestablecer={() => setConfig(configPorDefecto)}
           />
+          <a href="https://github.com/RamonEnProceso/UTN-Toolkit/issues/new" target="_blank" rel="noopener noreferrer" style={{marginLeft: '8px'}}>
+            <button className="reportar-errores">Reportar errores</button>
+          </a>
         </aside>
 
         <main className="panel-canvas">
