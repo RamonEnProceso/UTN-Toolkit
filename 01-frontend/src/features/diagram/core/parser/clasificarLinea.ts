@@ -98,9 +98,10 @@ function parsearParametros(crudo: string): Parametro[] {
 // Devuelve null si no tiene esa forma. Se exporta porque parsear la reutiliza
 // en la segunda pasada.
 export function extraerLlamada(texto: string): FormaLlamada | null {
-  // Caso 1: "var <- nombre(args)" (asignación a una variable).
+  // Caso 1: "var <- nombre(args)" (asignación a una variable o campo de registro).
+  // Tolera "<-" y "←", identificadores con puntos (ej. "registro.variable") y ";" opcional.
   const conAsignacion = texto.match(
-    /^([A-Za-z_][A-Za-z0-9_]*)\s*<-\s*([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$/,
+    /^([A-Za-z_][A-Za-z0-9_.]*)\s*(?:<-|←)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)\s*;?$/,
   );
   if (conAsignacion) {
     return {
@@ -111,8 +112,8 @@ export function extraerLlamada(texto: string): FormaLlamada | null {
     };
   }
 
-  // Caso 2: "nombre(args)" con ":" final opcional, como "main():".
-  const simple = texto.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)\s*:?$/);
+  // Caso 2: "nombre(args)" con ":" o ";" final opcional, como "main():" o "funcion();".
+  const simple = texto.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)\s*[:;]?$/);
   if (simple) {
     return {
       nombre: simple[1],

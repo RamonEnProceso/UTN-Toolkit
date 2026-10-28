@@ -205,6 +205,16 @@ describe('parsear — casos extra', () => {
     expect(llamada.argumentos).toEqual([{ nombre: '1', direccion: 'entrada' }]);
   });
 
+  it('reconoce asignaciones a campos de registro y con punto y coma', () => {
+    const p = parsear('- main()\n    - visitantes.nombre <- leerInput();');
+    expect(p.errores).toEqual([]);
+    const llamada = p.funciones[0].cuerpo[0] as NodoLlamada;
+    expect(llamada.tipo).toBe('llamada');
+    expect(llamada.nombre).toBe('leerInput');
+    expect(llamada.asignaA).toBe('visitantes.nombre');
+    expect(llamada.argumentos).toEqual([]);
+  });
+
   it('reporta paréntesis sin cerrar en una firma', () => {
     const p = parsear('- imprimirTexto(texto v\n    - Imprimir texto');
     expect(p.errores).toHaveLength(1);
