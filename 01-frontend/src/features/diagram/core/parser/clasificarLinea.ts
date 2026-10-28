@@ -149,7 +149,7 @@ export function clasificarLinea(crudo: string): LineaClasificada {
   // 2. Quitamos la sangría y el "- " inicial. Toleramos que falte el espacio
   //    ("-Si x = 0") y que falte el guion directamente ("Leer x") (sección 4.1).
   let resto = crudo.slice(indentStr.length);
-  resto = resto.replace(/^-\s*/, '').replace(/<-/g, '←').replace(/->/g, '→').replace(/!=/g, '≠').trim();
+  resto = resto.replace(/^-\s*/, '').replace(/<-/g, '←').replace(/->/g, '→').replace(/!=/g, '≠').replace(/>=/g, '≥').replace(/<=/g, '≤').trim();
   const texto = resto;
 
   const base: LineaClasificada = {
