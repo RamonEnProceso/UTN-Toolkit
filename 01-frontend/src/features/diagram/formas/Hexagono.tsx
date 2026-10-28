@@ -22,15 +22,15 @@ interface Props {
 // `h2` el semialto total (asta + punta). Entrada apunta abajo, salida arriba.
 function flechaD(direccion: Direccion, cx: number, cy: number, a: number, h2: number): string {
   const n = (v: number) => v.toFixed(2);
-  const astaCompleta = `M ${n(cx*1.01)} ${n(cy - 1.2*h2)} L ${n(cx*1.01)} ${n(cy + 1.2*h2)}`;
-  const puntaArriba = `M ${n(cx*1.01 - a)} ${n(cy - 1.2*h2 + a)} L ${n(cx*1.01)} ${n(cy - 1.2*h2)} L ${n(cx*1.01 + a)} ${n(cy - 1.2*h2 + a)}`;
-  const puntaAbajo = `M ${n(cx*1.01 - a)} ${n(cy + 1.2*h2 - a)} L ${n(cx*1.01)} ${n(cy + 1.2*h2)} L ${n(cx*1.01 + a)} ${n(cy + 1.2*h2 - a)}`;
+  const astaCompleta = `M ${n(cx)} ${n(cy - 1.2*h2)} L ${n(cx)} ${n(cy + 1.2*h2)}`;
+  const puntaArriba = `M ${n(cx - a)} ${n(cy - 1.2*h2 + a)} L ${n(cx)} ${n(cy - 1.2*h2)} L ${n(cx + a)} ${n(cy - 1.2*h2 + a)}`;
+  const puntaAbajo = `M ${n(cx - a)} ${n(cy + 1.2*h2 - a)} L ${n(cx)} ${n(cy + 1.2*h2)} L ${n(cx + a)} ${n(cy + 1.2*h2 - a)}`;
 
   if (direccion === 'entrada') {
-    return `M ${n(cx*1.01)} ${n(cy - h2)} L ${n(cx*1.01)} ${n(cy + 1.6*h2 - a)} ${puntaAbajo}`;
+    return `M ${n(cx)} ${n(cy - h2)} L ${n(cx)} ${n(cy + 1.6*h2 - a)} ${puntaAbajo}`;
   }
   if (direccion === 'salida') {
-    return `M ${n(cx*1.01)} ${n(cy + h2)} L ${n(cx*1.01)} ${n(cy - 1.6*h2 + a)} ${puntaArriba}`;
+    return `M ${n(cx)} ${n(cy + h2)} L ${n(cx)} ${n(cy - 1.6*h2 + a)} ${puntaArriba}`;
   }
   return `${astaCompleta} ${puntaArriba} ${puntaAbajo}`;
 }
